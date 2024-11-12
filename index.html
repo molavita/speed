@@ -70,7 +70,7 @@
             downloadSpeedEl.textContent = '...';
             uploadSpeedEl.textContent = '...';
 
-            // URL de prueba para descarga (puede cambiarse por una URL de archivo más grande)
+            // URL de prueba para descarga
             const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
             const fileSize = 146000; // Tamaño del archivo en bytes para calcular la velocidad
 
@@ -79,8 +79,19 @@
             await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
             const endDownload = new Date().getTime();
             const downloadDuration = (endDownload - startDownload) / 1000; // En segundos
-            const downloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2);
-            downloadSpeedEl.innerHTML = `${downloadSpeed} <span class="units">Mbps</span>`;
+            const maxDownloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2);
+
+            // Progresivamente incrementamos la velocidad de descarga
+            let currentDownloadSpeed = 0;
+            const downloadInterval = setInterval(() => {
+                if (currentDownloadSpeed < maxDownloadSpeed) {
+                    currentDownloadSpeed += 0.5; // Incremento gradual de velocidad
+                    downloadSpeedEl.innerHTML = `${currentDownloadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
+                } else {
+                    clearInterval(downloadInterval);
+                    downloadSpeedEl.innerHTML = `${maxDownloadSpeed} <span class="units">Mbps</span> (finalizado)`;
+                }
+            }, 50);
 
             // Medir la velocidad de carga
             const uploadData = new Uint8Array(5 * 1024 * 1024); // 5 MB de datos de prueba
@@ -94,8 +105,19 @@
             });
             const endUpload = new Date().getTime();
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
-            const uploadSpeed = ((uploadData.length * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
-            uploadSpeedEl.innerHTML = `${uploadSpeed} <span class="units">Mbps</span>`;
+            const maxUploadSpeed = ((uploadData.length * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
+
+            // Progresivamente incrementamos la velocidad de carga
+            let currentUploadSpeed = 0;
+            const uploadInterval = setInterval(() => {
+                if (currentUploadSpeed < maxUploadSpeed) {
+                    currentUploadSpeed += 0.5; // Incremento gradual de velocidad
+                    uploadSpeedEl.innerHTML = `${currentUploadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
+                } else {
+                    clearInterval(uploadInterval);
+                    uploadSpeedEl.innerHTML = `${maxUploadSpeed} <span class="units">Mbps</span> (finalizado)`;
+                }
+            }, 50);
         }
     </script>
 </body>
