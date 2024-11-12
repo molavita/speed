@@ -135,8 +135,8 @@
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
-            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
-            const fileSize = 146000; // Tamaño del archivo en bytes
+            const imageUrl = "https://speed.hetzner.de/1GB.bin";
+            const fileSize = 100 * 1024 * 1024; // Tamaño del archivo en bytes
 
             // Medir la velocidad de descarga
             const startDownload = new Date().getTime();
