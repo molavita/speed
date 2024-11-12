@@ -96,17 +96,30 @@
             }, 50);
         }
 
-        // Función para medir la velocidad de carga
+        // Función para medir la velocidad de carga (simulada de manera más realista)
         async function measureUpload() {
             const uploadSpeedEl = document.getElementById('uploadSpeed');
             uploadSpeedEl.textContent = '...';
 
-            // Simulamos el tamaño de 5 MB para la carga
-            const uploadSize = 5 * 1024 * 1024; // 5 MB de datos de prueba
+            // Crear un archivo simulado para la carga (Blob de 5MB)
+            const uploadSize = 5 * 1024 * 1024; // 5 MB
+            const file = new Blob([new Array(uploadSize).join('0')], { type: 'application/octet-stream' });
+
+            // Simular la carga
+            const startUpload = new Date().getTime();
+
+            // Crear un formulario y un archivo simulado para cargar
+            const formData = new FormData();
+            formData.append('file', file, 'file.bin');
 
             // Simulación de carga
-            const startUpload = new Date().getTime();
-            await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
+            await new Promise(resolve => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "/upload", true); // Cambia esta URL si tienes un endpoint real
+                xhr.onload = resolve;
+                xhr.send(formData);
+            });
+
             const endUpload = new Date().getTime();
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
             const maxUploadSpeed = ((uploadSize * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
@@ -126,5 +139,6 @@
     </script>
 </body>
 </html>
+
 
 
