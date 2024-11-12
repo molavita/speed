@@ -19,7 +19,7 @@
             text-align: center;
         }
         .container {
-            max-width: 400px;
+            max-width: 500px;
             padding: 20px;
             background-color: rgba(0, 0, 0, 0.5);
             border-radius: 12px;
@@ -57,6 +57,10 @@
             width: 100%;
             height: 250px;
             margin-top: 20px;
+        }
+        #ipInfo {
+            margin-top: 15px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -100,14 +104,22 @@
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     x: {
                         type: 'linear',
-                        position: 'bottom'
+                        position: 'bottom',
+                        ticks: {
+                            display: false // Ocultar etiquetas del eje X (tiempo)
+                        }
                     },
                     y: {
                         min: 0,
-                        max: 100
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Mbps'
+                        }
                     }
                 }
             }
