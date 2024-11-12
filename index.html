@@ -71,14 +71,10 @@
         <div>Velocidad de descarga</div>
         <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
 
-        <div>Velocidad de carga</div>
-        <div id="uploadSpeed" class="speed">0 <span class="units">Mbps</span></div>
-
         <div id="ipInfo"></div> <!-- Aquí se mostrará la IP y el proveedor -->
 
-        <!-- Botones para medir velocidad de descarga o carga -->
+        <!-- Botón para medir velocidad de descarga -->
         <button class="button" onclick="measureDownload()">Medir Descarga</button>
-        <button class="button" onclick="measureUpload()">Medir Carga</button>
 
         <!-- Gráfica de progreso -->
         <canvas id="myChart"></canvas>
@@ -96,11 +92,6 @@
                     borderColor: 'rgb(0, 170, 255)',
                     data: [],
                     fill: false
-                }, {
-                    label: 'Velocidad de Carga',
-                    borderColor: 'rgb(255, 165, 0)',
-                    data: [],
-                    fill: false
                 }]
             },
             options: {
@@ -115,7 +106,7 @@
                     },
                     y: {
                         min: 0,
-                        max: 100,
+                        max: 1000, // Hasta 1000 Mbps (1 Gbps)
                         title: {
                             display: true,
                             text: 'Mbps'
@@ -165,44 +156,12 @@
             }, 50);
         }
 
-        // Función para medir la velocidad de carga
-        async function measureUpload() {
-            const uploadSpeedEl = document.getElementById('uploadSpeed');
-            uploadSpeedEl.textContent = '...';
-
-            // Simulamos el tamaño de 5 MB para la carga
-            const uploadSize = 5 * 1024 * 1024; // 5 MB de datos de prueba
-
-            // Simulación de carga
-            const startUpload = new Date().getTime();
-            await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
-            const endUpload = new Date().getTime();
-            const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
-            const maxUploadSpeed = ((uploadSize * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
-
-            // Progresivamente incrementamos la velocidad de carga
-            let currentUploadSpeed = 0;
-            const uploadInterval = setInterval(() => {
-                if (currentUploadSpeed < maxUploadSpeed) {
-                    currentUploadSpeed += 0.5; // Incremento gradual de velocidad
-                    uploadSpeedEl.innerHTML = `${currentUploadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
-
-                    // Agregar datos a la gráfica
-                    chart.data.labels.push(chart.data.labels.length + 1);
-                    chart.data.datasets[1].data.push(currentUploadSpeed);
-                    chart.update();
-                } else {
-                    clearInterval(uploadInterval);
-                    uploadSpeedEl.innerHTML = `${maxUploadSpeed} <span class="units">Mbps</span> (finalizado)`;
-                }
-            }, 50);
-        }
-
         // Llamar a la función para obtener IP y proveedor
         getIpInfo();
     </script>
 </body>
 </html>
+
 
 
 
