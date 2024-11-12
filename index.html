@@ -23,6 +23,7 @@
             background-color: rgba(0, 0, 0, 0.5);
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 90%; /* Ajuste para pantallas más pequeñas */
         }
         .title {
             font-size: 24px;
@@ -50,6 +51,44 @@
         }
         .button:hover {
             background-color: #0077cc;
+        }
+
+        /* Media Query para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 20px;
+            }
+            .speed {
+                font-size: 28px;
+            }
+            .units {
+                font-size: 16px;
+            }
+            .button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+            .container {
+                width: 90%;
+                padding: 15px;
+            }
+        }
+
+        /* Media Query para pantallas muy pequeñas (móviles) */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 18px;
+            }
+            .speed {
+                font-size: 24px;
+            }
+            .units {
+                font-size: 14px;
+            }
+            .button {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
         }
     </style>
 </head>
@@ -96,30 +135,17 @@
             }, 50);
         }
 
-        // Función para medir la velocidad de carga (simulada de manera más realista)
+        // Función para medir la velocidad de carga
         async function measureUpload() {
             const uploadSpeedEl = document.getElementById('uploadSpeed');
             uploadSpeedEl.textContent = '...';
 
-            // Crear un archivo simulado para la carga (Blob de 5MB)
-            const uploadSize = 5 * 1024 * 1024; // 5 MB
-            const file = new Blob([new Array(uploadSize).join('0')], { type: 'application/octet-stream' });
-
-            // Simular la carga
-            const startUpload = new Date().getTime();
-
-            // Crear un formulario y un archivo simulado para cargar
-            const formData = new FormData();
-            formData.append('file', file, 'file.bin');
+            // Simulamos el tamaño de 5 MB para la carga
+            const uploadSize = 5 * 1024 * 1024; // 5 MB de datos de prueba
 
             // Simulación de carga
-            await new Promise(resolve => {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "/upload", true); // Cambia esta URL si tienes un endpoint real
-                xhr.onload = resolve;
-                xhr.send(formData);
-            });
-
+            const startUpload = new Date().getTime();
+            await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
             const endUpload = new Date().getTime();
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
             const maxUploadSpeed = ((uploadSize * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
