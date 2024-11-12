@@ -115,7 +115,7 @@
                     },
                     y: {
                         min: 0,
-                        max: 1000, // Ajustado a 1000 Mbps (1 Gbps)
+                        max: 100,
                         title: {
                             display: true,
                             text: 'Mbps'
@@ -137,22 +137,21 @@
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
+            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
+            const fileSize = 146000; // Tamaño del archivo en bytes
 
-            const fileSize = 1 * 1024 * 1024 * 1024; // 1GB en bytes
-            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg"; // Simulando archivo de prueba
-
+            // Medir la velocidad de descarga
             const startDownload = new Date().getTime();
-            const response = await fetch(imageUrl, { cache: "no-cache" });
-            const blob = await response.blob();
+            await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
             const endDownload = new Date().getTime();
-            
             const downloadDuration = (endDownload - startDownload) / 1000; // En segundos
-            const maxDownloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2); // velocidad en Mbps
+            const maxDownloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2);
 
+            // Progresivamente incrementamos la velocidad de descarga
             let currentDownloadSpeed = 0;
             const downloadInterval = setInterval(() => {
                 if (currentDownloadSpeed < maxDownloadSpeed) {
-                    currentDownloadSpeed += (Math.random() * 10); // Hacerlo más dinámico con valores aleatorios de subida/bajada
+                    currentDownloadSpeed += 0.5; // Incremento gradual de velocidad
                     downloadSpeedEl.innerHTML = `${currentDownloadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
 
                     // Agregar datos a la gráfica
@@ -171,20 +170,21 @@
             const uploadSpeedEl = document.getElementById('uploadSpeed');
             uploadSpeedEl.textContent = '...';
 
-            // Simulamos el tamaño de 1GB para la carga
-            const uploadSize = 1 * 1024 * 1024 * 1024; // 1GB en bytes
+            // Simulamos el tamaño de 5 MB para la carga
+            const uploadSize = 5 * 1024 * 1024; // 5 MB de datos de prueba
 
+            // Simulación de carga
             const startUpload = new Date().getTime();
-            await new Promise(resolve => setTimeout(resolve, 300)); // Simulación de carga
+            await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
             const endUpload = new Date().getTime();
-
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
             const maxUploadSpeed = ((uploadSize * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
 
+            // Progresivamente incrementamos la velocidad de carga
             let currentUploadSpeed = 0;
             const uploadInterval = setInterval(() => {
                 if (currentUploadSpeed < maxUploadSpeed) {
-                    currentUploadSpeed += (Math.random() * 10); // Simula la variabilidad de la velocidad
+                    currentUploadSpeed += 0.5; // Incremento gradual de velocidad
                     uploadSpeedEl.innerHTML = `${currentUploadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
 
                     // Agregar datos a la gráfica
@@ -203,6 +203,7 @@
     </script>
 </body>
 </html>
+
 
 
 
