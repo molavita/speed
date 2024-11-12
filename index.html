@@ -65,7 +65,7 @@
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
 
-            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
+            const imageUrl = "https://e7.pngegg.com/pngimages/261/601/png-clipart-logo-brand-product-design-labor-residential-speed-limit-25-angle-company-thumbnail.png";
             const fileSize = 146000; // Tamaño aproximado de la imagen en bytes
 
             // Mide el tiempo que toma descargar el archivo
@@ -81,7 +81,7 @@
             let currentSpeed = 0;
             const interval = setInterval(() => {
                 if (currentSpeed < maxSpeedMbps) {
-                    currentSpeed += 0.5; // Incremento gradual de velocidad (ajusta según prefieras)
+                    currentSpeed += 0.3; // Incremento gradual de velocidad (ajusta según prefieras)
                     downloadSpeedEl.innerHTML = `${currentSpeed.toFixed(2)} <span class="units">Mbps</span>`;
                 } else {
                     // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
