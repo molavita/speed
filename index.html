@@ -81,7 +81,7 @@
             let currentSpeed = 0;
             const interval = setInterval(() => {
                 if (currentSpeed < maxSpeedMbps) {
-                    currentSpeed += 0.3; // Incremento gradual de velocidad (ajusta según prefieras)
+                    currentSpeed += 0.5; // Incremento gradual de velocidad (ajusta según prefieras)
                     downloadSpeedEl.innerHTML = `${currentSpeed.toFixed(2)} <span class="units">Mbps</span>`;
                 } else {
                     // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
