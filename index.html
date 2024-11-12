@@ -119,7 +119,7 @@
         // Función para obtener la IP y el proveedor usando ipinfo.io
         async function getIpInfo() {
             const ipInfoEl = document.getElementById('ipInfo');
-            const response = await fetch('https://ipinfo.io/json?token=YOUR_TOKEN'); // Sustituye YOUR_TOKEN por un token si lo necesitas
+            const response = await fetch('ipinfo.io/176.83.40.56?token=27e3b42a8222a1'); // Sustituye YOUR_TOKEN por un token si lo necesitas
             const data = await response.json();
             ipInfoEl.textContent = `IP: ${data.ip}, Proveedor: ${data.org}`;
         }
