@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medidor de Velocidad de WiFi</title>
+    <title>Test de Velocidad MTM</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -53,7 +53,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="title">Medidor de Velocidad de WiFi</div>
+        <div class="title">Test de velocidad MTM</div>
         <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
         <div>Velocidad de descarga</div>
         <button class="button" onclick="measureSpeed()">Iniciar Prueba</button>
@@ -85,7 +85,7 @@
                 } else {
                     // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
                     clearInterval(interval);
-                    downloadSpeedEl.innerHTML = `${maxSpeedMbps} <span class="units">Mbps</span> (completa)`;
+                    downloadSpeedEl.innerHTML = `${maxSpeedMbps} <span class="units">Mbps</span> (finalizado)`;
                 }
             }, 50); // Intervalo de actualización (ajusta para un efecto más rápido o lento)
         }
