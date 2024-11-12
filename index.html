@@ -71,7 +71,7 @@
         <div>Velocidad de descarga</div>
         <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
 
-        <div id="ipInfo"></div> <!-- Aquí se mostrará la IP y el proveedor -->
+        <div id="ipInfo"></div> <!-- Aquí se mostrará la IP y otros datos -->
 
         <!-- Botón para medir velocidad de descarga -->
         <button class="button" onclick="measureDownload()">Iniciar Test</button>
@@ -116,12 +116,19 @@
             }
         });
 
-        // Función para obtener la IP y el proveedor usando ipinfo.io
+        // Función para obtener la IP y otros datos usando ipinfo.io
         async function getIpInfo() {
             const ipInfoEl = document.getElementById('ipInfo');
-            const response = await fetch('https://ipinfo.io/json?token=YOUR_TOKEN'); // Sustituye YOUR_TOKEN por un token si lo necesitas
+            const response = await fetch('https://ipinfo.io/json?token=27e3b42a8222a1'); // Sustituye YOUR_TOKEN por tu token
             const data = await response.json();
-            ipInfoEl.textContent = `IP: ${data.ip}, Proveedor: ${data.org}`;
+            ipInfoEl.innerHTML = `
+                IP: ${data.ip} <br>
+                Ciudad: ${data.city} <br>
+                País: ${data.country} <br>
+                Región: ${data.region} <br>
+                Código de Área: ${data.postal} <br>
+                Proveedor: ${data.org}
+            `;
         }
 
         // Función para medir la velocidad de descarga
