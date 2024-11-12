@@ -50,6 +50,86 @@
         .button:hover {
             background-color: #0077cc;
         }
+            /* Media Queries para pantallas pequeñas (móviles) */
+        @media (max-width: 600px) {
+            .container {
+                max-width: 90%;
+                padding: 15px;
+            }
+            .title {
+                font-size: 20px;
+            }
+            .speed {
+                font-size: 36px;
+            }
+            .units {
+                font-size: 16px;
+            }
+            .button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+
+        /* Media Queries para pantallas medianas (tabletas) */
+        @media (min-width: 601px) and (max-width: 1024px) {
+            .container {
+                max-width: 80%;
+                padding: 20px;
+            }
+            .title {
+                font-size: 22px;
+            }
+            .speed {
+                font-size: 42px;
+            }
+            .units {
+                font-size: 17px;
+            }
+            .button {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Test de velocidad MTM</div>
+        <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
+        <div>Velocidad de descarga</div>
+        <button class="button" onclick="measureSpeed()">Iniciar Prueba</button>
+    </div>
+
+    <script>
+        async function measureSpeed() {
+            const downloadSpeedEl = document.getElementById('downloadSpeed');
+            downloadSpeedEl.textContent = '...';
+
+            const imageUrl = "#";
+            const fileSize = 146000; // Tamaño aproximado de la imagen en bytes
+
+            // Mide el tiempo que toma descargar el archivo
+            const startTime = new Date().getTime();
+            await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
+            const endTime = new Date().getTime();
+
+            // Calcula la velocidad máxima en Mbps
+            const duration = (endTime - startTime) / 1000; // Tiempo en segundos
+            const maxSpeedMbps = ((fileSize * 8) / (duration * 1024 * 1024)).toFixed(2);
+
+            // Muestra la velocidad progresivamente hasta llegar al valor máximo
+            let currentSpeed = 0;
+            const interval = setInterval(() => {
+                if (currentSpeed < maxSpeedMbps) {
+                    currentSpeed += 0.5; // Incremento gradual de velocidad (ajusta según prefieras)
+                    downloadSpeedEl.innerHTML = `${currentSpeed.toFixed(2)} <span class="units">Mbps</span>`;
+                } else {
+                    // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
+                    clearInterval(interval);
+                    downloadSpeedEl.innerHTML = `${maxSpeedMbps} <span class="units">Mbps</span> (finalizado)`;
+                }
+            }, 50); // Intervalo de actualización (ajusta para un efecto más rápido o lento)
+        }
     </style>
 </head>
 <body>
