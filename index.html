@@ -93,19 +93,14 @@
                 }
             }, 50);
 
-            // Medir la velocidad de carga
-            const uploadData = new Uint8Array(5 * 1024 * 1024); // 5 MB de datos de prueba
+            // Simulación de la velocidad de carga
+            const uploadSize = 5 * 1024 * 1024; // Simulamos 5 MB de datos de prueba
             const startUpload = new Date().getTime();
-            await fetch(imageUrl, {
-                method: 'POST',
-                body: uploadData,
-                headers: {
-                    'Content-Type': 'application/octet-stream',
-                }
-            });
+            // Simulamos la espera que habría en un envío real sin usar una URL de destino
+            await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
             const endUpload = new Date().getTime();
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
-            const maxUploadSpeed = ((uploadData.length * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
+            const maxUploadSpeed = ((uploadSize * 8) / (uploadDuration * 1024 * 1024)).toFixed(2);
 
             // Progresivamente incrementamos la velocidad de carga
             let currentUploadSpeed = 0;
@@ -122,4 +117,5 @@
     </script>
 </body>
 </html>
+
 
