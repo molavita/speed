@@ -46,6 +46,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: background 0.3s;
+            margin: 5px;
         }
         .button:hover {
             background-color: #0077cc;
@@ -55,24 +56,25 @@
 <body>
     <div class="container">
         <div class="title">Test de Velocidad MTM</div>
+        
         <div>Velocidad de descarga</div>
         <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
+        
         <div>Velocidad de carga</div>
         <div id="uploadSpeed" class="speed">0 <span class="units">Mbps</span></div>
-        <button class="button" onclick="measureSpeed()">Iniciar Prueba</button>
+
+        <!-- Botones para medir velocidad de descarga o carga -->
+        <button class="button" onclick="measureDownload()">Medir Descarga</button>
+        <button class="button" onclick="measureUpload()">Medir Carga</button>
     </div>
 
     <script>
-        async function measureSpeed() {
+        // Función para medir la velocidad de descarga
+        async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
-            const uploadSpeedEl = document.getElementById('uploadSpeed');
-
             downloadSpeedEl.textContent = '...';
-            uploadSpeedEl.textContent = '...';
-
-            // URL de prueba para descarga
             const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
-            const fileSize = 146000; // Tamaño del archivo en bytes para calcular la velocidad
+            const fileSize = 146000; // Tamaño del archivo en bytes
 
             // Medir la velocidad de descarga
             const startDownload = new Date().getTime();
@@ -92,11 +94,18 @@
                     downloadSpeedEl.innerHTML = `${maxDownloadSpeed} <span class="units">Mbps</span> (finalizado)`;
                 }
             }, 50);
+        }
 
-            // Simulación de la velocidad de carga
-            const uploadSize = 5 * 1024 * 1024; // Simulamos 5 MB de datos de prueba
+        // Función para medir la velocidad de carga
+        async function measureUpload() {
+            const uploadSpeedEl = document.getElementById('uploadSpeed');
+            uploadSpeedEl.textContent = '...';
+
+            // Simulamos el tamaño de 5 MB para la carga
+            const uploadSize = 5 * 1024 * 1024; // 5 MB de datos de prueba
+
+            // Simulación de carga
             const startUpload = new Date().getTime();
-            // Simulamos la espera que habría en un envío real sin usar una URL de destino
             await new Promise(resolve => setTimeout(resolve, 300)); // Pausa breve para simular carga
             const endUpload = new Date().getTime();
             const uploadDuration = (endUpload - startUpload) / 1000; // En segundos
