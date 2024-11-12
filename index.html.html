@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medidor de Velocidad de WiFi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #6A11CB 0%, #2575FC 100%);
+            color: #fff;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .speed {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .units {
+            font-size: 18px;
+            font-weight: normal;
+        }
+        .button {
+            background-color: #00aaff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background-color: #0077cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Medidor de Velocidad de WiFi</div>
+        <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
+        <div>Velocidad de descarga</div>
+        <button class="button" onclick="measureSpeed()">Iniciar Prueba</button>
+    </div>
+
+    <script>
+        async function measureSpeed() {
+            const downloadSpeedEl = document.getElementById('downloadSpeed');
+            downloadSpeedEl.textContent = '...';
+
+            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
+            const fileSize = 146000; // Tamaño aproximado de la imagen en bytes
+
+            // Mide el tiempo que toma descargar el archivo
+            const startTime = new Date().getTime();
+            await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
+            const endTime = new Date().getTime();
+
+            // Calcula la velocidad máxima en Mbps
+            const duration = (endTime - startTime) / 1000; // Tiempo en segundos
+            const maxSpeedMbps = ((fileSize * 8) / (duration * 1024 * 1024)).toFixed(2);
+
+            // Muestra la velocidad progresivamente hasta llegar al valor máximo
+            let currentSpeed = 0;
+            const interval = setInterval(() => {
+                if (currentSpeed < maxSpeedMbps) {
+                    currentSpeed += 0.5; // Incremento gradual de velocidad (ajusta según prefieras)
+                    downloadSpeedEl.innerHTML = `${currentSpeed.toFixed(2)} <span class="units">Mbps</span>`;
+                } else {
+                    // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
+                    clearInterval(interval);
+                    downloadSpeedEl.innerHTML = `${maxSpeedMbps} <span class="units">Mbps</span> (completa)`;
+                }
+            }, 50); // Intervalo de actualización (ajusta para un efecto más rápido o lento)
+        }
+    </script>
+</body>
+</html>
