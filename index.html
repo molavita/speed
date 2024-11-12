@@ -64,27 +64,30 @@
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
 
-            // Usar un archivo más grande para una prueba más precisa (por ejemplo, 5 MB)
-            const imageUrl = "https://speed.hetzner.de/5MB.bin"; // Archivo de 5 MB
-            const fileSize = 5 * 1024 * 1024; // Tamaño en bytes
+            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg";
+            const fileSize = 146000; // Tamaño aproximado de la imagen en bytes
 
+            // Mide el tiempo que toma descargar el archivo
             const startTime = new Date().getTime();
             await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
             const endTime = new Date().getTime();
 
-            const duration = (endTime - startTime) / 1000; // Duración en segundos
+            // Calcula la velocidad máxima en Mbps
+            const duration = (endTime - startTime) / 1000; // Tiempo en segundos
             const maxSpeedMbps = ((fileSize * 8) / (duration * 1024 * 1024)).toFixed(2);
 
+            // Muestra la velocidad progresivamente hasta llegar al valor máximo
             let currentSpeed = 0;
             const interval = setInterval(() => {
                 if (currentSpeed < maxSpeedMbps) {
-                    currentSpeed += 0.5;
-                    downloadSpeedEl.innerHTML = `${currentSpeed.toFixed(2)} <span class="units">Mbps</span>`;
+                    currentSpeed += 0.5; // Incremento gradual de velocidad (ajusta según prefieras)
+                    downloadSpeedEl.innerHTML = ${currentSpeed.toFixed(2)} <span class="units">Mbps</span>;
                 } else {
+                    // Cuando alcanzamos el máximo, detenemos el intervalo y mostramos el valor final
                     clearInterval(interval);
-                    downloadSpeedEl.innerHTML = `${maxSpeedMbps} <span class="units">Mbps</span> (completa)`;
+                    downloadSpeedEl.innerHTML = ${maxSpeedMbps} <span class="units">Mbps</span> (completa);
                 }
-            }, 50);
+            }, 50); // Intervalo de actualización (ajusta para un efecto más rápido o lento)
         }
     </script>
 </body>
