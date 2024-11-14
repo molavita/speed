@@ -135,8 +135,8 @@
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
-            const imageUrl = "https://speed.hetzner.de/1gb.bin"; // Archivo de 1000 MB
-            const fileSize = 1000 * 1024 * 1024; // Tamaño en bytes
+            const imageUrl = "https://speed.hetzner.de/300mb.bin"; // Archivo de 1000 MB
+            const fileSize = 300 * 1024 * 1024; // Tamaño en bytes
             // Medir la velocidad de descarga
             const startDownload = new Date().getTime();
             await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
