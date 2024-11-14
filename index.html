@@ -130,8 +130,8 @@
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
 
-            const imageUrl = "https://speed.hetzner.de/100MB.bin"; // Archivo grande para mejor precisión
-            const fileSize = 100 * 1024 * 1024; // 100 MB en bytes
+            const imageUrl = "https://speed.hetzner.de/10MB.bin"; // Archivo de prueba (10 MB)
+            const fileSize = 10 * 1024 * 1024; // 10 MB en bytes
 
             try {
                 const startDownload = new Date().getTime();
@@ -160,7 +160,7 @@
                     }
                 }, 50);
             } catch (error) {
-                downloadSpeedEl.innerHTML = "Error en la prueba de velocidad";
+                downloadSpeedEl.innerHTML = "Error en la prueba de velocidad. Verifica el archivo de prueba y la conexión de red.";
                 console.error("Error en la descarga:", error);
             }
         }
@@ -169,6 +169,7 @@
     </script>
 </body>
 </html>
+
 
 
 
