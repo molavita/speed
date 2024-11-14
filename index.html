@@ -144,7 +144,7 @@
                 const endDownload = new Date().getTime();
 
                 const downloadDuration = (endDownload - startDownload) / 1000; // Tiempo en segundos
-                const downloadSpeed = ((fileSize * 4) / (downloadDuration * 1024 * 1024)).toFixed(2); // Mbps
+                const downloadSpeed = ((fileSize * 1) / (downloadDuration * 1024 * 1024)).toFixed(2); // Mbps
 
                 let currentDownloadSpeed = 0;
                 const downloadInterval = setInterval(() => {
