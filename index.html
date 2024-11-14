@@ -98,7 +98,7 @@
                     },
                     y: {
                         min: 0,
-                        max: 1000,
+                        max: 100,
                         title: {
                             display: true,
                             text: 'Mbps'
@@ -126,31 +126,27 @@
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
 
-            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg"; // Archivo de 10 MB
-            const fileSize = 10 * 1024 * 1024; // 10 MB en bytes
-            const repetitions = 10; // Número de veces que descargaremos el archivo
-            let totalDownloadDuration = 0;
+            const imageUrl = "https://speed.hetzner.de/100MB.bin"; // Archivo grande para mejor precisión
+            const fileSize = 100 * 1024 * 1024; // 100 MB en bytes
 
-            for (let i = 0; i < repetitions; i++) {
-                const startDownload = new Date().getTime();
-                await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
-                const endDownload = new Date().getTime();
-                totalDownloadDuration += (endDownload - startDownload) / 1000;
-            }
+            const startDownload = new Date().getTime();
+            await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
+            const endDownload = new Date().getTime();
 
-            const avgDownloadSpeed = ((fileSize * repetitions * 8) / (totalDownloadDuration * 1024 * 1024)).toFixed(2);
+            const downloadDuration = (endDownload - startDownload) / 1000; // Tiempo en segundos
+            const downloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2); // Mbps
 
             let currentDownloadSpeed = 0;
             const downloadInterval = setInterval(() => {
-                if (currentDownloadSpeed < avgDownloadSpeed) {
-                    currentDownloadSpeed += 10;
+                if (currentDownloadSpeed < downloadSpeed) {
+                    currentDownloadSpeed += 0.5;
                     downloadSpeedEl.innerHTML = `${currentDownloadSpeed.toFixed(2)} <span class="units">Mbps</span>`;
                     chart.data.labels.push(chart.data.labels.length + 1);
                     chart.data.datasets[0].data.push(currentDownloadSpeed);
                     chart.update();
                 } else {
                     clearInterval(downloadInterval);
-                    downloadSpeedEl.innerHTML = `${avgDownloadSpeed} <span class="units">Mbps</span> (finalizado)`;
+                    downloadSpeedEl.innerHTML = `${downloadSpeed} <span class="units">Mbps</span> (finalizado)`;
                 }
             }, 50);
         }
