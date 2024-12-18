@@ -146,7 +146,7 @@
                 await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
                 const endDownload = new Date().getTime();
 
-                totalDownloadDuration += (endDownload - startDownload) / 600; // Tiempo en segundos
+                totalDownloadDuration += (endDownload - startDownload) / 1000; // Tiempo en segundos
             }
 
             // Calcula la velocidad media en Mbps
