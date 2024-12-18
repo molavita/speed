@@ -119,7 +119,7 @@
         // Función para obtener la IP y otros datos usando ipinfo.io
         async function getIpInfo() {
             const ipInfoEl = document.getElementById('ipInfo');
-            const response = await fetch('https://ipinfo.io/json?token=27e3b42a8222a1'); // Sustituye YOUR_TOKEN por tu token
+            const response = await fetch('https://ipinfo.io/json?token=27e3b42a8222a1'); // token
             const data = await response.json();
             ipInfoEl.innerHTML = `
                 IP: ${data.ip} <br>
@@ -135,14 +135,14 @@
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
             downloadSpeedEl.textContent = '...';
-            const imageUrl = "https://speed.hetzner.de/300mb.bin"; // Archivo de 1000 MB
+            const imageUrl = "https://speed.hetzner.de/300mb.bin"; // Archivo de 300 MB
             const fileSize = 300 * 1024 * 1024; // Tamaño en bytes
             // Medir la velocidad de descarga
             const startDownload = new Date().getTime();
             await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
             const endDownload = new Date().getTime();
             const downloadDuration = (endDownload - startDownload) / 1000; // En segundos
-            const maxDownloadSpeed = ((fileSize * 8) / (downloadDuration * 1024 * 1024)).toFixed(2);
+            const maxDownloadSpeed = ((fileSize * 5) / (downloadDuration * 1024 * 1024)).toFixed(2);
 
             // Progresivamente incrementamos la velocidad de descarga
             let currentDownloadSpeed = 0;
