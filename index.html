@@ -142,7 +142,7 @@
             await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
             const endDownload = new Date().getTime();
             const downloadDuration = (endDownload - startDownload) / 1000; // En segundos
-            const maxDownloadSpeed = ((fileSize * 5) / (downloadDuration * 1024 * 1024)).toFixed(2);
+            const maxDownloadSpeed = ((fileSize * 15) / (downloadDuration * 1024 * 1024)).toFixed(2);
 
             // Progresivamente incrementamos la velocidad de descarga
             let currentDownloadSpeed = 0;
