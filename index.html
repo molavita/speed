@@ -146,11 +146,11 @@
                 await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
                 const endDownload = new Date().getTime();
 
-                totalDownloadDuration += (endDownload - startDownload) / 1000; // Tiempo en segundos
+                totalDownloadDuration += (endDownload - startDownload) / 100; // Tiempo en segundos
             }
 
             // Calcula la velocidad media en Mbps
-            const avgDownloadSpeed = ((fileSize * repetitions * 5) / (totalDownloadDuration * 1024 * 1024)).toFixed(2);
+            const avgDownloadSpeed = ((fileSize * repetitions * 1) / (totalDownloadDuration * 1024 * 1024)).toFixed(2);
 
             // Progresivamente incrementamos la velocidad de descarga en pantalla y en la gráfica
             let currentDownloadSpeed = 0;
