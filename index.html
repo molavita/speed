@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/molavita/speed/refs/heads/gh-pages/imagen/speed.png">
@@ -70,109 +71,115 @@
         <div>Velocidad de descarga</div>
         <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
 
-        <div id="ipInfo"></div> <!-- Aquí se mostrará la IP y otros datos -->
+        <div id="ipInfo"></div>
 
-        <!-- Botón para medir velocidad de descarga -->
-        <button class="button" onclick="measureDownload()">Iniciar Test</button>
+        <button class="button" id="startBtn">Iniciar Test</button>
 
-        <!-- Gráfica de progreso -->
         <canvas id="myChart"></canvas>
     </div>
 
     <script>
-        // Inicializar la gráfica con Chart.js
-        var ctx = document.getElementById('myChart').getContext('2d');
-        var chart = new Chart(ctx, {
+        // === Configurar gráfico ===
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // Etiquetas del tiempo
+                labels: [],
                 datasets: [{
-                    label: 'Velocidad de Descarga',
+                    label: 'Velocidad de Descarga (Mbps)',
                     borderColor: 'rgb(0, 170, 255)',
                     data: [],
-                    fill: false
+                    fill: false,
+                    tension: 0.2
                 }]
             },
             options: {
-                responsive: true,
+                animation: false,
                 scales: {
                     x: {
-                        type: 'linear',
-                        position: 'bottom',
-                        ticks: {
-                            display: false // Ocultar etiquetas del eje X (tiempo)
-                        }
+                        title: { display: true, text: 'Tiempo (segundos)' }
                     },
                     y: {
                         min: 0,
-                        max: 1000, // Hasta 1000 Mbps (1 Gbps)
-                        title: {
-                            display: true,
-                            text: 'Mbps'
-                        }
+                        title: { display: true, text: 'Mbps' }
                     }
                 }
             }
         });
 
-        // Función para obtener la IP y otros datos usando ipinfo.io
+        // === Mostrar información de IP ===
         async function getIpInfo() {
-            const ipInfoEl = document.getElementById('ipInfo');
-            const response = await fetch('https://ipinfo.io/json?token=27e3b42a8222a1'); // token
-            const data = await response.json();
-            ipInfoEl.innerHTML = 
-                IP: ${data.ip} <br>
-                Ciudad: ${data.city} <br>
-                País: ${data.country} <br>
-                Región: ${data.region} <br>
-                Código de Área: ${data.postal} <br>
-                Proveedor: ${data.org}
-            ;
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                document.getElementById('ipInfo').innerHTML = `
+                    IP: ${data.ip}<br>
+                    Ciudad: ${data.city}<br>
+                    País: ${data.country_name}<br>
+                    Región: ${data.region}<br>
+                    Proveedor: ${data.org || 'Desconocido'}
+                `;
+            } catch (e) {
+                document.getElementById('ipInfo').textContent = "No se pudo obtener la información IP.";
+            }
         }
 
-         // Función para medir la velocidad de descarga
+        // === Test de descarga ===
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById('downloadSpeed');
-            downloadSpeedEl.textContent = '...';
+            const startBtn = document.getElementById('startBtn');
 
-            const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg"; // Archivo de 10 MB para múltiples descargas
-            const fileSize = 10 * 1024 * 1024; // 10 MB en bytes
-            const repetitions = 0.10; // Número de veces que descargaremos el archivo
+            startBtn.disabled = true;
+            startBtn.textContent = "Midiendo...";
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.update();
 
-            let totalDownloadDuration = 0;
+            try {
+                const imageUrl = "https://speed.hetzner.de/10MB.bin?" + Date.now();
+                const fileSize = 10 * 1024 * 1024; // 10 MB
 
-            for (let i = 0; i < repetitions; i++) {
-                const startDownload = new Date().getTime();
-                await fetch(imageUrl, { cache: "no-cache" }).then(response => response.blob());
-                const endDownload = new Date().getTime();
+                const startTime = performance.now();
+                const response = await fetch(imageUrl, { cache: "no-store" });
+                await response.blob();
+                const endTime = performance.now();
 
-                totalDownloadDuration += (endDownload - startDownload) / 1000; // Tiempo en segundos
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = ((fileSize * 8) / (duration * 1024 * 1024)).toFixed(2);
+
+                let progress = 0;
+                const step = speedMbps / 40;
+                const interval = setInterval(() => {
+                    if (progress < speedMbps) {
+                        progress += step;
+                        chart.data.labels.push(chart.data.labels.length / 10);
+                        chart.data.datasets[0].data.push(progress);
+                        chart.update();
+                        downloadSpeedEl.innerHTML = `${progress.toFixed(2)} <span class="units">Mbps</span>`;
+                    } else {
+                        clearInterval(interval);
+                        downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span> (finalizado)`;
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Iniciar Test";
+                    }
+                }, 100);
+
+            } catch (error) {
+                downloadSpeedEl.textContent = "Error en el test.";
+                startBtn.disabled = false;
+                startBtn.textContent = "Iniciar Test";
+                console.error(error);
             }
-
-            // Calcula la velocidad media en Mbps
-            const avgDownloadSpeed = ((fileSize * repetitions * 15) / (totalDownloadDuration * 1024 * 1024)).toFixed(2);
-
-            // Progresivamente incrementamos la velocidad de descarga en pantalla y en la gráfica
-            let currentDownloadSpeed = 0;
-            const downloadInterval = setInterval(() => {
-                if (currentDownloadSpeed < avgDownloadSpeed) {
-                    currentDownloadSpeed += 10; // Incremento gradual de velocidad
-                    downloadSpeedEl.innerHTML = ${currentDownloadSpeed.toFixed(2)} <span class="units">Mbps</span>;
-                    chart.data.labels.push(chart.data.labels.length + 1);
-                    chart.data.datasets[0].data.push(currentDownloadSpeed);
-                    chart.update();
-                } else {
-                    clearInterval(downloadInterval);
-                    downloadSpeedEl.innerHTML = ${avgDownloadSpeed} <span class="units">Mbps</span> (finalizado);
-                }
-            }, 50);
         }
 
-        // Llamar a la función para obtener IP y proveedor
+        // === Eventos ===
+        document.getElementById('startBtn').addEventListener('click', measureDownload);
         getIpInfo();
     </script>
 </body>
 </html>
+
+
 
 
 
