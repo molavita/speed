@@ -72,7 +72,7 @@
       options: {
         animation: false,
         scales: {
-          x: { title: { display: true, text: 'Prueba #' } },
+          x: { title: { display: true, text:  } },
           y: { min: 0, title: { display: true, text: 'Mbps' } }
         }
       }
@@ -122,7 +122,7 @@
       }
 
       const avgSpeed = (speeds.reduce((a,b)=>a+b,0)/speeds.length).toFixed(2);
-      downloadSpeedEl.innerHTML = `${avgSpeed} <span class="units">Mbps</span> (promedio)`;
+      downloadSpeedEl.innerHTML = `${avgSpeed} <span class="units">Mbps</span>`;
       startBtn.disabled = false;
       startBtn.textContent = "Iniciar Test";
     }
@@ -132,6 +132,7 @@
   </script>
 </body>
 </html>
+
 
 
 
