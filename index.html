@@ -98,87 +98,130 @@
       }
     }
 
-    // === Test de descarga ===
+    // === Test de descarga mejorado (paralelo + streaming) ===
     async function measureDownload() {
-  const downloadSpeedEl = document.getElementById('downloadSpeed');
-  const startBtn = document.getElementById('startBtn');
-  startBtn.disabled = true;
-  startBtn.textContent = "Midiendo...";
-  chart.data.labels = [];
-  chart.data.datasets[0].data = [];
-  chart.update();
+      const downloadSpeedEl = document.getElementById('downloadSpeed');
+      const startBtn = document.getElementById('startBtn');
+      startBtn.disabled = true;
+      startBtn.textContent = "Midiendo...";
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+      chart.update();
 
-  const testFile = "https://download.thinkbroadband.com/10MB.zip"; // CORS-friendly
-  const approxFileSize = 10 * 1024 * 1024; // bytes (fallback si no hay content-length)
+      // --- CONFIGURACIÓN (puedes ajustar estos valores)
+      const testFile = "https://download.thinkbroadband.com/20MB.zip"; // servidor CORS-friendly
+      const parallelConnections = 6;   // número de descargas paralelas (aumenta para medir más alto)
+      const maxDurationMs = 8000;     // duración de la prueba (ms) - 8s por defecto
+      const globalTimeoutMs = 20000;  // timeout total por seguridad (ms)
 
-  let speedMbps = 0;
-  const controller = new AbortController();
-  const timeoutMs = 20000; // 20 s timeout
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      const startTime = performance.now();
+      let totalBytes = 0;
+      const controllers = [];
+      let finished = false;
 
-  try {
-    const start = performance.now();
-    const response = await fetch(testFile + "?t=" + Date.now(), {
-      cache: "no-store",
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ${response.statusText}`);
-    }
-
-    // Si el servidor provee content-length, úsalo como referencia
-    const contentLengthHeader = response.headers.get('content-length');
-    const fileSizeBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : approxFileSize;
-
-    if (response.body && response.body.getReader) {
-      // Streaming (más preciso)
-      const reader = response.body.getReader();
-      let received = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) received += value.length;
-        // opcional: mostrar progreso en consola
-        // console.log('received', received);
+      // función que hace una descarga y devuelve los bytes leídos
+      async function singleDownload(signal) {
+        try {
+          const response = await fetch(testFile + "?t=" + Date.now(), { cache: "no-store", signal });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          // si hay streaming:
+          if (response.body && response.body.getReader) {
+            const reader = response.body.getReader();
+            let received = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) {
+                received += value.length;
+                // stop if test duration exceeded
+                const now = performance.now();
+                if (now - startTime >= maxDurationMs) {
+                  // abort upstream via signal (we'll handle externally)
+                  break;
+                }
+              }
+            }
+            return received;
+          } else {
+            // fallback: descargar como blob (menos preciso)
+            const blob = await response.blob();
+            return blob.size;
+          }
+        } catch (err) {
+          // si abortado o error, devolvemos 0 (se controla arriba)
+          console.error('singleDownload error:', err);
+          return 0;
+        }
       }
-      const end = performance.now();
-      const duration = (end - start) / 1000;
-      speedMbps = Number((received * 8 / (duration * 1024 * 1024)).toFixed(2));
-    } else {
-      // Fallback si no hay streaming (menos preciso)
-      await response.blob();
-      const end = performance.now();
-      const duration = (end - start) / 1000;
-      speedMbps = Number((fileSizeBytes * 8 / (duration * 1024 * 1024)).toFixed(2));
+
+      // Lanzar varias descargas en paralelo y detenerlas cuando supere la duración
+      try {
+        // global abort para seguridad
+        const globalController = new AbortController();
+        const globalTimeout = setTimeout(() => globalController.abort(), globalTimeoutMs);
+
+        const workers = new Array(parallelConnections).fill(null).map(() => {
+          const c = new AbortController();
+          controllers.push(c);
+          // combine signals: if global aborted, abort local
+          const combinedSignal = c.signal;
+          // We won't truly "combine" signals here; we'll abort each controller when needed.
+          return (async () => {
+            const bytes = await singleDownload(combinedSignal);
+            return bytes;
+          })();
+        });
+
+        // also set a timer to stop reading after maxDurationMs
+        await new Promise(resolve => setTimeout(resolve, maxDurationMs));
+
+        // after maxDurationMs, abort all controllers to stop fetch/reads
+        controllers.forEach(c => c.abort());
+
+        // wait for all workers to finish/settle
+        const settled = await Promise.allSettled(workers);
+
+        clearTimeout(globalTimeout);
+
+        // sum bytes
+        for (const s of settled) {
+          if (s.status === 'fulfilled' && typeof s.value === 'number') {
+            totalBytes += s.value;
+          }
+        }
+
+        const endTime = performance.now();
+        const durationSec = Math.max( (endTime - startTime) / 1000, 0.001 );
+
+        const speedMbps = (totalBytes * 8) / (durationSec * 1024 * 1024);
+        const speedRounded = Number(speedMbps.toFixed(2));
+
+        // update chart & UI
+        chart.data.labels.push('1');
+        chart.data.datasets[0].data.push(speedRounded);
+        chart.update();
+
+        downloadSpeedEl.innerHTML = `${speedRounded} <span class="units">Mbps</span>`;
+      } catch (err) {
+        console.error('measureDownload error:', err);
+        downloadSpeedEl.textContent = "Error en la medición";
+      } finally {
+        // asegurar que todo sea abortado y boton reactivado
+        controllers.forEach(c => {
+          try { c.abort(); } catch(e) {}
+        });
+        startBtn.disabled = false;
+        startBtn.textContent = "Iniciar Test";
+      }
     }
 
-    // Actualizar UI y gráfico
-    chart.data.labels.push('1');
-    chart.data.datasets[0].data.push(speedMbps);
-    chart.update();
-
-    downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span>`;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error("Error en la medición:", error);
-    if (error.name === 'AbortError') {
-      downloadSpeedEl.textContent = "Tiempo de espera agotado (timeout)";
-    } else {
-      downloadSpeedEl.textContent = "Error en la medición";
-    }
-  } finally {
-    startBtn.disabled = false;
-    startBtn.textContent = "Iniciar Test";
-  }
-}
     document.getElementById('startBtn').addEventListener('click', measureDownload);
     getIpInfo();
   </script>
 </body>
 </html>
+
+
 
 
 
