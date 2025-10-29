@@ -160,11 +160,9 @@
       
       // Servidores de prueba con archivos grandes
       const testFiles = [
-        // Archivos grandes de servidores optimizados para speed tests
-        "https://speed.hetzner.de/100MB.bin",
-        "https://proof.ovh.net/files/100Mb.dat", 
-        "http://speedtest.tele2.net/100MB.zip",
-        "https://download.microsoft.com/download/8/7/5/875E3A29-61F1-4E13-8E11-D5F1DBB30F6C/VS2019.Community.exe" // ~1.3MB
+        "https://corsproxy.io/?https://speed.hetzner.de/10MB.bin",
+        "https://corsproxy.io/?https://proof.ovh.net/files/10Mb.dat",
+        "https://httpbin.org/bytes/10485760", // 10MB
       ];
       
       let speeds = [];
@@ -306,6 +304,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
