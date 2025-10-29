@@ -123,9 +123,6 @@
       const duration = (end - start) / 1000;
       const speedMbps = (received * 8 / (duration * 1024 * 1024)).toFixed(2);
 
-      const numTests = 8;
-      let speeds = [];
-
       for (let i = 1; i <= numTests; i++) {
         const start = performance.now();
         await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.blob());
@@ -154,6 +151,7 @@
   </script>
 </body>
 </html>
+
 
 
 
