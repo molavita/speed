@@ -151,14 +151,13 @@
       chart.data.datasets[0].data = [];
       chart.update();
       
-      // Servidores de prueba más confiables
-      const testFiles = [
         // Usar archivos de diferentes fuentes
-        "https://httpbin.org/bytes/524288", // 512KB
-        "https://httpbin.org/bytes/1048576", // 1MB
-        "https://httpbin.org/bytes/2097152", // 2MB
-        "https://httpbin.org/bytes/5242880", // 5MB
-      ];
+       const testFiles = [
+  "https://httpbin.org/bytes/102400", // 100KB
+  "https://httpbin.org/bytes/204800", // 200KB  
+  "https://httpbin.org/bytes/512000", // 500KB
+  "https://httpbin.org/bytes/1024000", // 1MB
+];
       
       let speeds = [];
       const numTests = 4;
@@ -233,6 +232,7 @@
   </script>
 </body>
 </html>
+
 
 
 
