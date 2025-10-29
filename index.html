@@ -100,60 +100,86 @@
 
     // === Test de descarga ===
     async function measureDownload() {
-      const downloadSpeedEl = document.getElementById('downloadSpeed');
-      const startBtn = document.getElementById('startBtn');
-      startBtn.disabled = true;
-      startBtn.textContent = "Midiendo...";
-      chart.data.labels = [];
-      chart.data.datasets[0].data = [];
-      chart.update();
+  const downloadSpeedEl = document.getElementById('downloadSpeed');
+  const startBtn = document.getElementById('startBtn');
+  startBtn.disabled = true;
+  startBtn.textContent = "Midiendo...";
+  chart.data.labels = [];
+  chart.data.datasets[0].data = [];
+  chart.update();
 
-      const testFile = "https://download.thinkbroadband.com/10MB.zip"; // archivo con CORS habilitado
-      const fileSizeBytes = 10 * 1024 * 1024;
-      let speedMbps = 0;
+  const testFile = "https://download.thinkbroadband.com/10MB.zip"; // CORS-friendly
+  const approxFileSize = 10 * 1024 * 1024; // bytes (fallback si no hay content-length)
 
-      try {
-        const start = performance.now();
-        const response = await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" });
+  let speedMbps = 0;
+  const controller = new AbortController();
+  const timeoutMs = 20000; // 20 s timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-        if (response.body && response.body.getReader) {
-          const reader = response.body.getReader();
-          let received = 0;
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            received += value.length;
-          }
-          const end = performance.now();
-          const duration = (end - start) / 1000;
-          speedMbps = (received * 8 / (duration * 1024 * 1024)).toFixed(2);
-        } else {
-          // Fallback (si no hay streaming disponible)
-          await response.blob();
-          const end = performance.now();
-          const duration = (end - start) / 1000;
-          speedMbps = (fileSizeBytes * 8 / (duration * 1024 * 1024)).toFixed(2);
-        }
+  try {
+    const start = performance.now();
+    const response = await fetch(testFile + "?t=" + Date.now(), {
+      cache: "no-store",
+      signal: controller.signal
+    });
 
-        chart.data.labels.push(1);
-        chart.data.datasets[0].data.push(speedMbps);
-        chart.update();
+    clearTimeout(timeoutId);
 
-        downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span>`;
-      } catch (error) {
-        console.error("Error en la medición:", error);
-        downloadSpeedEl.textContent = "Error en la medición";
-      }
-
-      startBtn.disabled = false;
-      startBtn.textContent = "Iniciar Test";
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText}`);
     }
 
+    // Si el servidor provee content-length, úsalo como referencia
+    const contentLengthHeader = response.headers.get('content-length');
+    const fileSizeBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : approxFileSize;
+
+    if (response.body && response.body.getReader) {
+      // Streaming (más preciso)
+      const reader = response.body.getReader();
+      let received = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) received += value.length;
+        // opcional: mostrar progreso en consola
+        // console.log('received', received);
+      }
+      const end = performance.now();
+      const duration = (end - start) / 1000;
+      speedMbps = Number((received * 8 / (duration * 1024 * 1024)).toFixed(2));
+    } else {
+      // Fallback si no hay streaming (menos preciso)
+      await response.blob();
+      const end = performance.now();
+      const duration = (end - start) / 1000;
+      speedMbps = Number((fileSizeBytes * 8 / (duration * 1024 * 1024)).toFixed(2));
+    }
+
+    // Actualizar UI y gráfico
+    chart.data.labels.push('1');
+    chart.data.datasets[0].data.push(speedMbps);
+    chart.update();
+
+    downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span>`;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("Error en la medición:", error);
+    if (error.name === 'AbortError') {
+      downloadSpeedEl.textContent = "Tiempo de espera agotado (timeout)";
+    } else {
+      downloadSpeedEl.textContent = "Error en la medición";
+    }
+  } finally {
+    startBtn.disabled = false;
+    startBtn.textContent = "Iniciar Test";
+  }
+}
     document.getElementById('startBtn').addEventListener('click', measureDownload);
     getIpInfo();
   </script>
 </body>
 </html>
+
 
 
 
