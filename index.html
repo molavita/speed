@@ -73,7 +73,7 @@
       options: {
         animation: false,
         scales: {
-          x: { title: { display: false } },  // 🔹 Título del eje X quitado
+          x: { title: { display: false } },
           y: { min: 0, title: { display: true, text: 'Mbps' } }
         }
       }
@@ -107,41 +107,44 @@
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
       chart.update();
-      
-      const response = await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" });
-      const reader = response.body.getReader();
-      let received = 0;
-      const start = performance.now();
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        received += value.length;
-      }
-      
-      const end = performance.now();
-      const duration = (end - start) / 1000;
-      const speedMbps = (received * 8 / (duration * 1024 * 1024)).toFixed(2);
 
-      for (let i = 1; i <= numTests; i++) {
+      const testFile = "https://download.thinkbroadband.com/10MB.zip"; // archivo con CORS habilitado
+      const fileSizeBytes = 10 * 1024 * 1024;
+      let speedMbps = 0;
+
+      try {
         const start = performance.now();
-        await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.blob());
-        const end = performance.now();
+        const response = await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" });
 
-        const duration = (end - start) / 1000;
-        const bitsLoaded = fileSizeBytes * 8;
-        const speedMbps = (bitsLoaded / (duration * 1024 * 1024)).toFixed(2);
+        if (response.body && response.body.getReader) {
+          const reader = response.body.getReader();
+          let received = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            received += value.length;
+          }
+          const end = performance.now();
+          const duration = (end - start) / 1000;
+          speedMbps = (received * 8 / (duration * 1024 * 1024)).toFixed(2);
+        } else {
+          // Fallback (si no hay streaming disponible)
+          await response.blob();
+          const end = performance.now();
+          const duration = (end - start) / 1000;
+          speedMbps = (fileSizeBytes * 8 / (duration * 1024 * 1024)).toFixed(2);
+        }
 
-        speeds.push(parseFloat(speedMbps));
-        chart.data.labels.push(i);
+        chart.data.labels.push(1);
         chart.data.datasets[0].data.push(speedMbps);
         chart.update();
+
         downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span>`;
-        await new Promise(r => setTimeout(r, 300));
+      } catch (error) {
+        console.error("Error en la medición:", error);
+        downloadSpeedEl.textContent = "Error en la medición";
       }
 
-      const avgSpeed = (speeds.reduce((a,b)=>a+b,0)/speeds.length).toFixed(2);
-      downloadSpeedEl.innerHTML = `${avgSpeed} <span class="units">Mbps</span>`; // 🔹 Sin "(promedio)"
       startBtn.disabled = false;
       startBtn.textContent = "Iniciar Test";
     }
