@@ -106,7 +106,7 @@
         animation: false,
         scales: {
           x: { 
-            title: { display: true, text: 'Tiempo (segundos)' }
+            title: { display: true, text: 'Pruebas' }
           },
           y: { 
             min: 0, 
@@ -136,7 +136,7 @@
       }
     }
 
-    // === Test de descarga mejorado ===
+    // === Test de descarga mejorado y simplificado ===
     async function measureDownload() {
       const downloadSpeedEl = document.getElementById('downloadSpeed');
       const startBtn = document.getElementById('startBtn');
@@ -151,112 +151,81 @@
       chart.data.datasets[0].data = [];
       chart.update();
       
-      // Servidores de prueba (archivos más grandes)
-      const testServers = [
-        // Archivos de diferentes tamaños para diferentes fases de prueba
-        { url: "https://proof.ovh.net/files/10Mb.dat", size: 10485760 }, // 10MB
-        { url: "https://proof.ovh.net/files/100Mb.dat", size: 104857600 }, // 100MB
-        { url: "http://speedtest.ftp.otenet.gr/files/test100Mb.db", size: 104857600 }, // 100MB
-        { url: "http://speedtest.tele2.net/100MB.zip", size: 104857600 }, // 100MB
+      // Servidores de prueba más confiables
+      const testFiles = [
+        // Usar archivos de diferentes fuentes
+        "https://httpbin.org/bytes/524288", // 512KB
+        "https://httpbin.org/bytes/1048576", // 1MB
+        "https://httpbin.org/bytes/2097152", // 2MB
+        "https://httpbin.org/bytes/5242880", // 5MB
       ];
       
-      let totalSpeed = 0;
-      let testCount = 0;
-      const maxTests = 5; // Número de pruebas a realizar
-      const testDuration = 5000; // 5 segundos por prueba
+      let speeds = [];
+      const numTests = 4;
       
       statusEl.textContent = "Iniciando prueba de velocidad...";
       
-      for (let i = 0; i < maxTests; i++) {
-        // Seleccionar servidor de prueba (rotar entre los disponibles)
-        const serverIndex = i % testServers.length;
-        const testFile = testServers[serverIndex].url;
-        const fileSize = testServers[serverIndex].size;
+      for (let i = 0; i < numTests; i++) {
+        const fileIndex = i % testFiles.length;
+        const testFile = testFiles[fileIndex];
         
-        statusEl.textContent = `Prueba ${i+1}/${maxTests} en progreso...`;
-        progressBar.style.width = `${(i / maxTests) * 100}%`;
+        // Calcular tamaño del archivo en bytes basado en la URL
+        const fileSizeBytes = parseInt(testFile.split('/').pop()) || 1048576; // Default 1MB
+        
+        statusEl.textContent = `Prueba ${i+1}/${numTests} en progreso...`;
+        progressBar.style.width = `${((i + 1) / numTests) * 100}%`;
         
         try {
-          const speed = await performDownloadTest(testFile, fileSize, testDuration, i);
-          totalSpeed += speed;
-          testCount++;
+          const startTime = performance.now();
+          
+          // Realizar la descarga
+          const response = await fetch(testFile + "?nocache=" + Date.now() + i);
+          const blob = await response.blob();
+          
+          const endTime = performance.now();
+          const duration = (endTime - startTime) / 1000; // segundos
+          
+          // Calcular velocidad
+          const bitsLoaded = blob.size * 8;
+          const speedMbps = (bitsLoaded / (duration * 1024 * 1024));
+          
+          speeds.push(speedMbps);
           
           // Actualizar gráfico
-          chart.data.labels.push(`${i+1}`);
-          chart.data.datasets[0].data.push(speed);
+          chart.data.labels.push(`Prueba ${i+1}`);
+          chart.data.datasets[0].data.push(parseFloat(speedMbps.toFixed(2)));
           chart.update();
           
-          downloadSpeedEl.innerHTML = `${speed.toFixed(2)} <span class="units">Mbps</span>`;
+          downloadSpeedEl.innerHTML = `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
           
           // Pequeña pausa entre pruebas
-          if (i < maxTests - 1) {
-            await new Promise(r => setTimeout(r, 1000));
+          if (i < numTests - 1) {
+            await new Promise(r => setTimeout(r, 500));
           }
         } catch (error) {
           console.error(`Error en prueba ${i+1}:`, error);
-          statusEl.textContent = `Error en prueba ${i+1}, continuando con la siguiente...`;
+          statusEl.textContent = `Error en prueba ${i+1}, continuando...`;
+          // Agregar 0 como fallback
+          speeds.push(0);
+          chart.data.labels.push(`Prueba ${i+1}`);
+          chart.data.datasets[0].data.push(0);
+          chart.update();
         }
       }
       
-      // Calcular velocidad promedio
-      const avgSpeed = totalSpeed / testCount;
+      // Calcular velocidad promedio (excluyendo ceros de pruebas fallidas)
+      const validSpeeds = speeds.filter(speed => speed > 0);
+      const avgSpeed = validSpeeds.length > 0 
+        ? validSpeeds.reduce((a, b) => a + b, 0) / validSpeeds.length 
+        : 0;
+      
       downloadSpeedEl.innerHTML = `${avgSpeed.toFixed(2)} <span class="units">Mbps</span>`;
-      statusEl.textContent = "Prueba completada";
-      progressBar.style.width = '100%';
+      statusEl.textContent = validSpeeds.length === numTests 
+        ? "Prueba completada exitosamente" 
+        : `Prueba completada (${validSpeeds.length}/${numTests} exitosas)`;
       
       startBtn.disabled = false;
       startBtn.textContent = "Iniciar Test";
-    }
-    
-    // Función para realizar una prueba de descarga individual
-    async function performDownloadTest(url, fileSize, duration, testIndex) {
-      return new Promise((resolve, reject) => {
-        let loadedBytes = 0;
-        let startTime = null;
-        let endTime = null;
-        const xhr = new XMLHttpRequest();
-        
-        xhr.open('GET', url + '?nocache=' + Date.now() + testIndex, true);
-        xhr.responseType = 'blob';
-        
-        xhr.onprogress = function(e) {
-          if (!startTime) {
-            startTime = performance.now();
-          }
-          loadedBytes = e.loaded;
-        };
-        
-        xhr.onload = function() {
-          endTime = performance.now();
-          const timeTaken = (endTime - startTime) / 1000; // segundos
-          const bitsLoaded = loadedBytes * 8;
-          const speedMbps = (bitsLoaded / (timeTaken * 1024 * 1024));
-          resolve(speedMbps);
-        };
-        
-        xhr.onerror = function() {
-          reject(new Error('Error en la descarga'));
-        };
-        
-        // Iniciar la descarga
-        xhr.send();
-        
-        // Cancelar después del tiempo especificado para evitar descargas demasiado largas
-        setTimeout(() => {
-          if (xhr.readyState !== 4) {
-            xhr.abort();
-            if (startTime) {
-              endTime = performance.now();
-              const timeTaken = (endTime - startTime) / 1000;
-              const bitsLoaded = loadedBytes * 8;
-              const speedMbps = (bitsLoaded / (timeTaken * 1024 * 1024));
-              resolve(speedMbps);
-            } else {
-              resolve(0);
-            }
-          }
-        }, duration);
-      });
     }
 
     document.getElementById('startBtn').addEventListener('click', measureDownload);
