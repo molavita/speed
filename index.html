@@ -107,9 +107,22 @@
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
       chart.update();
+      
+      const response = await fetch(testFile + "?t=" + Date.now(), { cache: "no-store" });
+      const reader = response.body.getReader();
+      let received = 0;
+      const start = performance.now();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        received += value.length;
+      }
+      
+      const end = performance.now();
+      const duration = (end - start) / 1000;
+      const speedMbps = (received * 8 / (duration * 1024 * 1024)).toFixed(2);
 
-      const testFile = "https://upload.wikimedia.org/wikipedia/commons/3/3f/JPEG_example_flower.jpg"; // archivo pequeño
-      const fileSizeBytes = 104857; // 102 KB aprox
       const numTests = 8;
       let speeds = [];
 
