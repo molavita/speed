@@ -191,11 +191,6 @@
           downloadSpeedEl.innerHTML = `${speed.toFixed(2)} <span class="units">Mbps</span>`;
           testInfoEl.textContent = `Prueba ${i+1}: ${speed.toFixed(2)} Mbps`;
           
-        } catch (error) {
-          console.error(`Error en prueba ${i+1}:`, error);
-          statusEl.textContent = `Error en prueba ${i+1}, continuando...`;
-          speeds.push(0);
-        }
         
         // Pequeña pausa entre pruebas
         if (i < 2) {
@@ -267,10 +262,6 @@
           resolve(finalSpeed);
         };
 
-        xhr.onerror = function() {
-          cleanup();
-          reject(new Error('Error en la descarga'));
-        };
 
         // Configurar timeout para cancelar después del tiempo especificado
         timer = setTimeout(() => {
@@ -304,6 +295,7 @@
   </script>
 </body>
 </html>
+
 
 
 
