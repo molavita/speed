@@ -135,7 +135,7 @@
             }
         }
 
-        // === Test de descarga ===
+        // === Test de descarga múltiple para evitar fallos CORS o bloqueo ===
         async function measureDownload() {
             const downloadSpeedEl = document.getElementById("downloadSpeed");
             const startBtn = document.getElementById("startBtn");
@@ -147,52 +147,41 @@
             chart.update();
 
             try {
-                // Cambié la URL por una que soporta CORS y es confiable
-                const imageUrl =
-                    "https://download.samplelib.com/mp4/sample-10s-720p.mp4?" + Date.now();
-                // Este archivo es de aproximadamente 4.6MB, lo ajustamos abajo
-                const fileSize = 4.6 * 1024 * 1024;
+                const fileURL = "https://download.samplelib.com/mp4/sample-5s.mp4";
+                const chunkSizeBytes = 500000; // medir aprox 0.5MB por chunk
+                const totalChunks = 20; // 20 chunks, total aprox 10MB
+                let totalBytes = 0;
 
                 const startTime = performance.now();
-                const response = await fetch(imageUrl, { cache: "no-store" });
 
-                if (!response.ok) {
-                    throw new Error(`Error en la descarga: código ${response.status}`);
+                for (let i = 0; i < totalChunks; i++) {
+                    // Añade un parámetro al URL para evitar cache
+                    const response = await fetch(`${fileURL}?cache_bust=${Date.now()}_${i}`, { cache: "no-store" });
+                    if (!response.ok) throw new Error(`Error al descargar chunk ${i + 1}: código ${response.status}`);
+
+                    const blob = await response.blob();
+                    totalBytes += blob.size;
+
+                    // Progreso visual aproximado
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const speedMbps = (totalBytes * 8) / (elapsed * 1024 * 1024);
+                    chart.data.labels.push((elapsed).toFixed(1));
+                    chart.data.datasets[0].data.push(speedMbps);
+                    chart.update();
+                    downloadSpeedEl.innerHTML = `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
                 }
 
-                await response.blob();
                 const endTime = performance.now();
-
                 const duration = (endTime - startTime) / 1000;
-                if (duration <= 0 || !isFinite(duration)) {
-                    throw new Error("Duración inválida para cálculo de velocidad");
-                }
+                const finalSpeedMbps = (totalBytes * 8) / (duration * 1024 * 1024);
 
-                const speedMbps = (fileSize * 8) / (duration * 1024 * 1024);
-                let progress = 0;
-                const step = speedMbps / 40;
-
-                const interval = setInterval(() => {
-                    if (progress < speedMbps) {
-                        progress += step;
-                        chart.data.labels.push((chart.data.labels.length / 10).toFixed(1));
-                        chart.data.datasets[0].data.push(progress);
-                        chart.update();
-                        downloadSpeedEl.innerHTML = `${progress.toFixed(2)} <span class="units">Mbps</span>`;
-                    } else {
-                        clearInterval(interval);
-                        downloadSpeedEl.innerHTML = `${speedMbps.toFixed(
-                            2
-                        )} <span class="units">Mbps</span> (finalizado)`;
-                        startBtn.disabled = false;
-                        startBtn.textContent = "Iniciar Test";
-                    }
-                }, 100);
+                downloadSpeedEl.innerHTML = `${finalSpeedMbps.toFixed(2)} <span class="units">Mbps</span> (finalizado)`;
             } catch (error) {
                 downloadSpeedEl.textContent = `Error en el test: ${error.message}`;
+                console.error(error);
+            } finally {
                 startBtn.disabled = false;
                 startBtn.textContent = "Iniciar Test";
-                console.error(error);
             }
         }
 
@@ -202,9 +191,6 @@
     </script>
 </body>
 </html>
-
-
-
 
 
 
