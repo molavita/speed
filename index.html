@@ -142,24 +142,22 @@
                 const startTime = performance.now();
                 const response = await fetch(imageUrl, { cache: "no-store" });
 
-                if (!response.ok) throw new Error("Error de descarga");
+                if (!response.ok) {
+                    throw new Error(`Error en la descarga: código ${response.status}`);
+                }
 
                 await response.blob();
                 const endTime = performance.now();
 
                 const duration = (endTime - startTime) / 1000;
-                let speedMbps;
-
-                if (duration > 0 && isFinite(duration)) {
-                    speedMbps = ((fileSize * 8) / (duration * 1024 * 1024));
-                } else {
-                    speedMbps = 0;
+                if (duration <= 0 || !isFinite(duration)) {
+                    throw new Error("Duración inválida para cálculo de velocidad");
                 }
 
-                speedMbps = Math.max(0, Math.min(speedMbps, 10000));
-
+                const speedMbps = ((fileSize * 8) / (duration * 1024 * 1024));
                 let progress = 0;
                 const step = speedMbps / 40;
+
                 const interval = setInterval(() => {
                     if (progress < speedMbps) {
                         progress += step;
@@ -176,7 +174,7 @@
                 }, 100);
 
             } catch (error) {
-                downloadSpeedEl.textContent = "Error en el test.";
+                downloadSpeedEl.textContent = `Error en el test: ${error.message}`;
                 startBtn.disabled = false;
                 startBtn.textContent = "Iniciar Test";
                 console.error(error);
@@ -189,6 +187,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
