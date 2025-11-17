@@ -141,24 +141,35 @@
 
                 const startTime = performance.now();
                 const response = await fetch(imageUrl, { cache: "no-store" });
+
+                if (!response.ok) throw new Error("Error de descarga");
+
                 await response.blob();
                 const endTime = performance.now();
 
                 const duration = (endTime - startTime) / 1000;
-                const speedMbps = ((fileSize * 8) / (duration * 1024 * 1024)).toFixed(2);
+                let speedMbps;
+
+                if (duration > 0 && isFinite(duration)) {
+                    speedMbps = ((fileSize * 8) / (duration * 1024 * 1024));
+                } else {
+                    speedMbps = 0;
+                }
+
+                speedMbps = Math.max(0, Math.min(speedMbps, 10000));
 
                 let progress = 0;
                 const step = speedMbps / 40;
                 const interval = setInterval(() => {
                     if (progress < speedMbps) {
                         progress += step;
-                        chart.data.labels.push(chart.data.labels.length / 10);
+                        chart.data.labels.push((chart.data.labels.length / 10).toFixed(1));
                         chart.data.datasets[0].data.push(progress);
                         chart.update();
                         downloadSpeedEl.innerHTML = `${progress.toFixed(2)} <span class="units">Mbps</span>`;
                     } else {
                         clearInterval(interval);
-                        downloadSpeedEl.innerHTML = `${speedMbps} <span class="units">Mbps</span> (finalizado)`;
+                        downloadSpeedEl.innerHTML = `${speedMbps.toFixed(2)} <span class="units">Mbps</span> (finalizado)`;
                         startBtn.disabled = false;
                         startBtn.textContent = "Iniciar Test";
                     }
@@ -178,3 +189,4 @@
     </script>
 </body>
 </html>
+
