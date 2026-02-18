@@ -216,68 +216,63 @@
     }
     
     async function performAccurateDownloadTest(url, duration, testId) {
-      return new Promise((resolve, reject) => {
-        let totalBytes = 0;
-        let startTime = null;
-        let measurements = [];
-        let xhr = null;
-        let timer = null;
-        const cleanup = () => {
-          if (xhr) xhr.abort();
-          if (timer) clearTimeout(timer);
-        };
-        const calculateSpeed = () => {
-          if (measurements.length === 0) return 0;
-          const latest = measurements[measurements.length - 1];
-          const timeElapsed = (latest.time - startTime) / 1000;
-          if (timeElapsed <= 0) return 0;
-          const speedMbps = (latest.bytes * 8) / (timeElapsed * 1024 * 1024);
-          return speedMbps;
-        };
+  return new Promise((resolve, reject) => {
+    let startTime = null;
+    let xhr = new XMLHttpRequest();
+    // Usamos un intervalo para actualizar el gráfico cada 200ms durante la descarga
+    let chartUpdateInterval;
+
+    xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
+
+    xhr.onprogress = function(e) {
+      if (!startTime) startTime = performance.now();
+      
+      const now = performance.now();
+      const timeElapsed = (now - startTime) / 1000;
+
+      if (timeElapsed > 0) {
+        // CÁLCULO: (Bytes * 8 bits) / (Segundos * 1,000,000) = Mbps
+        const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
         
-        xhr = new XMLHttpRequest();
-        xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
-        xhr.onprogress = function(e) {
-          if (!startTime) {
-            startTime = performance.now();
-          }
-          if (e.lengthComputable) {
-            totalBytes = e.loaded;
-            measurements.push({
-              bytes: totalBytes,
-              time: performance.now()
-            });
-          }
-        };
+        // Actualizar el número grande en pantalla en tiempo real
+        document.getElementById('downloadSpeed').innerHTML = 
+          `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
 
-        xhr.onload = function() {
-          cleanup();
-          const finalSpeed = calculateSpeed();
-          resolve(finalSpeed);
-        };
+        // Actualizar el gráfico cada cierto tiempo (opcional para fluidez)
+        if (!chartUpdateInterval || now - lastUpdate > 200) {
+            chart.data.labels.push(""); // O un timestamp corto
+            chart.data.datasets[0].data.push(speedMbps.toFixed(2));
+            chart.update('none'); // 'none' para que no sea lenta la animación
+            lastUpdate = now;
+        }
+      }
+    };
 
-        xhr.onerror = function() {
-          cleanup();
-          reject(new Error('Error en la descarga'));
-        };
+    let lastUpdate = 0;
 
-        timer = setTimeout(() => {
-          if (xhr.readyState !== 4) {
-            cleanup();
-            const finalSpeed = calculateSpeed();
-            resolve(finalSpeed);
-          }
-        }, duration);
+    xhr.onload = function() {
+      const timeElapsed = (performance.now() - startTime) / 1000;
+      const finalSpeed = (xhr.response.byteLength * 8) / (timeElapsed * 1000000);
+      resolve(finalSpeed);
+    };
 
-        xhr.send();
-      });
-    }
+    xhr.onerror = () => reject(new Error('Error de conexión'));
+    
+    // Timeout de seguridad
+    setTimeout(() => {
+        if(xhr.readyState !== 4) xhr.abort();
+    }, duration);
 
+    xhr.responseType = 'arraybuffer'; // Ayuda a medir el tamaño exacto en memoria
+    xhr.send();
+  });
+}
     document.getElementById('startBtn').addEventListener('click', measureDownload);
     getIpInfo();
   </script>
 </body>
 </html>
+
 
 
 
