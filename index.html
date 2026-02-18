@@ -216,28 +216,22 @@
     }
     
     async function performAccurateDownloadTest(url, duration, testId) {
-  return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
     let startTime = null;
     let xhr = new XMLHttpRequest();
     // Usamos un intervalo para actualizar el gráfico cada 200ms durante la descarga
     let chartUpdateInterval;
-
     xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
-
     xhr.onprogress = function(e) {
       if (!startTime) startTime = performance.now();
-      
       const now = performance.now();
       const timeElapsed = (now - startTime) / 1000;
-
       if (timeElapsed > 0) {
         // CÁLCULO: (Bytes * 8 bits) / (Segundos * 1,000,000) = Mbps
         const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
-        
         // Actualizar el número grande en pantalla en tiempo real
         document.getElementById('downloadSpeed').innerHTML = 
           `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
-
         // Actualizar el gráfico cada cierto tiempo (opcional para fluidez)
         if (!chartUpdateInterval || now - lastUpdate > 200) {
             chart.data.labels.push(""); // O un timestamp corto
@@ -249,7 +243,6 @@
     };
 
     let lastUpdate = 0;
-
     xhr.onload = function() {
       const timeElapsed = (performance.now() - startTime) / 1000;
       const finalSpeed = (xhr.response.byteLength * 8) / (timeElapsed * 1000000);
@@ -257,12 +250,10 @@
     };
 
     xhr.onerror = () => reject(new Error('Error de conexión'));
-    
     // Timeout de seguridad
     setTimeout(() => {
         if(xhr.readyState !== 4) xhr.abort();
     }, duration);
-
     xhr.responseType = 'arraybuffer'; // Ayuda a medir el tamaño exacto en memoria
     xhr.send();
   });
@@ -272,6 +263,7 @@
   </script>
 </body>
 </html>
+
 
 
 
