@@ -18,17 +18,20 @@
       color: #fff;
       text-align: center;
     }
+
     .container {
       max-width: 500px;
       padding: 20px;
       background-color: rgba(0, 0, 0, 0.5);
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      width: 90%;
+      width: 90%
     }
+
     .title { font-size: 24px; margin-bottom: 20px; }
     .speed { font-size: 36px; font-weight: bold; margin: 10px 0; }
     .units { font-size: 18px; }
+    
     .button {
       background-color: #00aaff;
       color: white;
@@ -40,13 +43,16 @@
       transition: background 0.3s;
       margin: 5px;
     }
+
     .button:hover { background-color: #0077cc; }
     .button:disabled {
       background-color: #666;
       cursor: not-allowed;
     }
+
     #myChart { width: 100%; height: 250px; margin-top: 20px; }
     #ipInfo { margin-top: 15px; font-size: 16px; line-height: 1.4; }
+
     .progress-bar {
       width: 100%;
       height: 10px;
@@ -55,17 +61,20 @@
       margin: 15px 0;
       overflow: hidden;
     }
+
     .progress {
       height: 100%;
       background-color: #00aaff;
       width: 0%;
       transition: width 0.3s;
     }
+
     .status {
       margin: 10px 0;
       font-size: 14px;
       color: #ddd;
     }
+
     .test-info {
       margin: 10px 0;
       font-size: 14px;
@@ -76,23 +85,17 @@
 <body>
   <div class="container">
     <div class="title">Test de Velocidad MTM</div>
-
     <div>Velocidad de descarga</div>
     <div id="downloadSpeed" class="speed">0 <span class="units">Mbps</span></div>
-
     <div class="progress-bar">
       <div class="progress" id="progressBar"></div>
     </div>
     <div class="status" id="status">Listo para iniciar</div>
     <div class="test-info" id="testInfo"></div>
-
     <div id="ipInfo">Cargando información IP...</div>
-
     <button class="button" id="startBtn">Iniciar Test</button>
-
     <canvas id="myChart"></canvas>
   </div>
-
   <script>
     const ctx = document.getElementById('myChart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -107,7 +110,9 @@
           fill: true,
           tension: 0.3
         }]
+
       },
+
       options: {
         animation: false,
         scales: {
@@ -135,6 +140,7 @@
           🌎 <b>País:</b> ${data.country_name || 'Desconocido'} <br>
           🏢 <b>Proveedor:</b> ${data.org || 'No disponible'}
         `;
+
       } catch (error) {
         document.getElementById('ipInfo').innerHTML = "⚠️ No se pudo obtener la información IP.";
         console.error(error);
@@ -147,33 +153,29 @@
       const progressBar = document.getElementById('progressBar');
       const statusEl = document.getElementById('status');
       const testInfoEl = document.getElementById('testInfo');
-      
       startBtn.disabled = true;
       startBtn.textContent = "Midiendo...";
       progressBar.style.width = '0%';
       chart.data.labels = [];
       chart.data.datasets[0].data = [];
       chart.update();
-      
+
       const testFiles = [
-      "https://speed.cloudflare.com/__down?bytes=50000000", // 50 MB
-      "https://speed.cloudflare.com/__down?bytes=50000000", 
-      "https://speed.cloudflare.com/__down?bytes=50000000"
+        "https://httpbun.com/bytes/10485760",
+        "https://httpbingo.org/bytes/10485760",
+        "https://httpbin.org/bytes/10485760"
       ];
-      
+
       let speeds = [];
       const testDuration = 8000;
-      
       statusEl.textContent = "Iniciando prueba de velocidad...";
       testInfoEl.textContent = "Descargando archivos grandes para medición precisa...";
-      
       for (let i = 0; i < 3; i++) {
         const fileIndex = i % testFiles.length;
         const testFile = testFiles[fileIndex];
-        
         statusEl.textContent = `Prueba ${i+1}/3 en progreso...`;
         progressBar.style.width = `${((i + 1) / 3) * 100}%`;
-        
+
         try {
           const speed = await performAccurateDownloadTest(testFile, testDuration, i);
           // Corregir velocidad para evitar infinity
@@ -182,98 +184,101 @@
             validatedSpeed = 0;
           }
           speeds.push(validatedSpeed);
-          
           const timeLabel = `${(i + 1) * 8}s`;
           chart.data.labels.push(timeLabel);
           chart.data.datasets[0].data.push(parseFloat(validatedSpeed.toFixed(2)));
           chart.update();
-          
           downloadSpeedEl.innerHTML = `${validatedSpeed.toFixed(2)} <span class="units">Mbps</span>`;
           testInfoEl.textContent = `Prueba ${i+1}: ${validatedSpeed.toFixed(2)} Mbps`;
-          
         } catch (error) {
           console.error(`Error en prueba ${i+1}:`, error);
           statusEl.textContent = `Error en prueba ${i+1}, continuando...`;
           speeds.push(0);
         }
-        
+
         if (i < 2) {
           await new Promise(r => setTimeout(r, 1000));
         }
       }
-      
+
       const validSpeeds = speeds.filter(speed => speed > 0);
       const avgSpeed = validSpeeds.length > 0 
         ? validSpeeds.reduce((a, b) => a + b, 0) / validSpeeds.length 
         : 0;
-      
+
       downloadSpeedEl.innerHTML = `${avgSpeed.toFixed(2)} <span class="units">Mbps</span>`;
       statusEl.textContent = validSpeeds.length === 3 
         ? "Prueba completada exitosamente" 
         : `Prueba completada (${validSpeeds.length}/3 exitosas)`;
       testInfoEl.textContent = `Velocidad promedio: ${avgSpeed.toFixed(2)} Mbps`;
-      
       startBtn.disabled = false;
       startBtn.textContent = "Iniciar Test";
     }
-
-    async function performAccurateDownloadTest(url, duration, testId) {
-  return new Promise((resolve, reject) => {
-    let startTime = null;
-    let xhr = new XMLHttpRequest();
-    // Usamos un intervalo para actualizar el gráfico cada 200ms durante la descarga
-    let chartUpdateInterval;
-
-    xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
-
-    xhr.onprogress = function(e) {
-      if (!startTime) startTime = performance.now();
-      
-      const now = performance.now();
-      const timeElapsed = (now - startTime) / 1000;
-
-      if (timeElapsed > 0) {
-        // CÁLCULO: (Bytes * 8 bits) / (Segundos * 1,000,000) = Mbps
-        const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
-        
-        // Actualizar el número grande en pantalla en tiempo real
-        document.getElementById('downloadSpeed').innerHTML = 
-          `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
-
-        // Actualizar el gráfico cada cierto tiempo (opcional para fluidez)
-        if (!chartUpdateInterval || now - lastUpdate > 200) {
-            chart.data.labels.push(""); // O un timestamp corto
-            chart.data.datasets[0].data.push(speedMbps.toFixed(2));
-            chart.update('none'); // 'none' para que no sea lenta la animación
-            lastUpdate = now;
-        }
-      }
-    };
-
-    let lastUpdate = 0;
-
-    xhr.onload = function() {
-      const timeElapsed = (performance.now() - startTime) / 1000;
-      const finalSpeed = (xhr.response.byteLength * 8) / (timeElapsed * 1000000);
-      resolve(finalSpeed);
-    };
-
-    xhr.onerror = () => reject(new Error('Error de conexión'));
     
-    // Timeout de seguridad
-    setTimeout(() => {
-        if(xhr.readyState !== 4) xhr.abort();
-    }, duration);
+    async function performAccurateDownloadTest(url, duration, testId) {
+      return new Promise((resolve, reject) => {
+        let totalBytes = 0;
+        let startTime = null;
+        let measurements = [];
+        let xhr = null;
+        let timer = null;
+        const cleanup = () => {
+          if (xhr) xhr.abort();
+          if (timer) clearTimeout(timer);
+        };
+        const calculateSpeed = () => {
+          if (measurements.length === 0) return 0;
+          const latest = measurements[measurements.length - 1];
+          const timeElapsed = (latest.time - startTime) / 1000;
+          if (timeElapsed <= 0) return 0;
+          const speedMbps = (latest.bytes * 8) / (timeElapsed * 1024 * 1024);
+          return speedMbps;
+        };
+        
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
+        xhr.onprogress = function(e) {
+          if (!startTime) {
+            startTime = performance.now();
+          }
+          if (e.lengthComputable) {
+            totalBytes = e.loaded;
+            measurements.push({
+              bytes: totalBytes,
+              time: performance.now()
+            });
+          }
+        };
 
-    xhr.responseType = 'arraybuffer'; // Ayuda a medir el tamaño exacto en memoria
-    xhr.send();
-  });
-}
+        xhr.onload = function() {
+          cleanup();
+          const finalSpeed = calculateSpeed();
+          resolve(finalSpeed);
+        };
+
+        xhr.onerror = function() {
+          cleanup();
+          reject(new Error('Error en la descarga'));
+        };
+
+        timer = setTimeout(() => {
+          if (xhr.readyState !== 4) {
+            cleanup();
+            const finalSpeed = calculateSpeed();
+            resolve(finalSpeed);
+          }
+        }, duration);
+
+        xhr.send();
+      });
+    }
+
     document.getElementById('startBtn').addEventListener('click', measureDownload);
     getIpInfo();
   </script>
 </body>
 </html>
+
 
 
 
