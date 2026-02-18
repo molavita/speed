@@ -220,13 +220,11 @@
     async function performAccurateDownloadTest(url, duration, testId) {
   return new Promise((resolve, reject) => {
     let startTime = null;
-    let lastUpdate = 0; // Movido aquí para mejor control
     let xhr = new XMLHttpRequest();
+    // Usamos un intervalo para actualizar el gráfico cada 200ms durante la descarga
+    let chartUpdateInterval;
 
-    // CORRECCIÓN AQUÍ: Usamos '&' en lugar de '?' porque la URL ya trae parámetros
-    const finalUrl = url + '&nocache=' + Date.now() + testId;
-
-    xhr.open('GET', finalUrl, true);
+    xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
 
     xhr.onprogress = function(e) {
       if (!startTime) startTime = performance.now();
@@ -234,42 +232,40 @@
       const now = performance.now();
       const timeElapsed = (now - startTime) / 1000;
 
-      if (timeElapsed > 0 && e.loaded > 0) {
+      if (timeElapsed > 0) {
+        // CÁLCULO: (Bytes * 8 bits) / (Segundos * 1,000,000) = Mbps
         const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
         
+        // Actualizar el número grande en pantalla en tiempo real
         document.getElementById('downloadSpeed').innerHTML = 
           `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
 
-        if (now - lastUpdate > 200) {
-            chart.data.labels.push(""); 
-            chart.data.datasets[0].data.push(parseFloat(speedMbps.toFixed(2)));
-            chart.update('none');
+        // Actualizar el gráfico cada cierto tiempo (opcional para fluidez)
+        if (!chartUpdateInterval || now - lastUpdate > 200) {
+            chart.data.labels.push(""); // O un timestamp corto
+            chart.data.datasets[0].data.push(speedMbps.toFixed(2));
+            chart.update('none'); // 'none' para que no sea lenta la animación
             lastUpdate = now;
         }
       }
     };
 
+    let lastUpdate = 0;
+
     xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        const timeElapsed = (performance.now() - startTime) / 1000;
-        const totalSize = xhr.response ? xhr.response.byteLength : 0;
-        const finalSpeed = (totalSize * 8) / (timeElapsed * 1000000);
-        resolve(finalSpeed);
-      } else {
-        reject(new Error('Error en el servidor: ' + xhr.status));
-      }
+      const timeElapsed = (performance.now() - startTime) / 1000;
+      const finalSpeed = (xhr.response.byteLength * 8) / (timeElapsed * 1000000);
+      resolve(finalSpeed);
     };
 
-    xhr.onerror = () => reject(new Error('Error de conexión (CORS o Red)'));
+    xhr.onerror = () => reject(new Error('Error de conexión'));
     
+    // Timeout de seguridad
     setTimeout(() => {
-        if(xhr.readyState !== 4) {
-          xhr.abort();
-          resolve(0); // Resolvemos con 0 para que el test siga
-        }
+        if(xhr.readyState !== 4) xhr.abort();
     }, duration);
 
-    xhr.responseType = 'arraybuffer';
+    xhr.responseType = 'arraybuffer'; // Ayuda a medir el tamaño exacto en memoria
     xhr.send();
   });
 }
@@ -278,6 +274,7 @@
   </script>
 </body>
 </html>
+
 
 
 
