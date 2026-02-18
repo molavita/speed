@@ -221,72 +221,51 @@
   return new Promise((resolve, reject) => {
     let startTime = null;
     let xhr = new XMLHttpRequest();
-    
-    // IMPORTANTE: Forzamos a que no use caché y que maneje datos binarios
+    // Usamos un intervalo para actualizar el gráfico cada 200ms durante la descarga
+    let chartUpdateInterval;
+
     xhr.open('GET', url + '?nocache=' + Date.now() + testId, true);
-    xhr.responseType = 'arraybuffer'; 
 
     xhr.onprogress = function(e) {
-      // 1. Iniciamos el tiempo SOLO cuando llega el primer bit real
-      if (!startTime && e.loaded > 0) {
-        startTime = performance.now();
-      }
+      if (!startTime) startTime = performance.now();
+      
+      const now = performance.now();
+      const timeElapsed = (now - startTime) / 1000;
 
-      if (startTime && e.loaded > 0) {
-        const now = performance.now();
-        const timeElapsed = (now - startTime) / 1000; // segundos
+      if (timeElapsed > 0) {
+        // CÁLCULO: (Bytes * 8 bits) / (Segundos * 1,000,000) = Mbps
+        const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
+        
+        // Actualizar el número grande en pantalla en tiempo real
+        document.getElementById('downloadSpeed').innerHTML = 
+          `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
 
-        if (timeElapsed > 0) {
-          // 2. Cálculo estándar industrial: (Bytes * 8) / (segundos * 1,000,000)
-          const speedMbps = (e.loaded * 8) / (timeElapsed * 1000000);
-          
-          // Actualizamos la interfaz en tiempo real
-          document.getElementById('downloadSpeed').innerHTML = 
-            `${speedMbps.toFixed(2)} <span class="units">Mbps</span>`;
-            
-          // Actualizamos el gráfico suavemente
-          chart.data.labels.push(""); 
-          chart.data.datasets[0].data.push(parseFloat(speedMbps.toFixed(2)));
-          if (chart.data.labels.length > 50) { // Mantenemos el gráfico limpio
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
-          }
-          chart.update('none'); 
+        // Actualizar el gráfico cada cierto tiempo (opcional para fluidez)
+        if (!chartUpdateInterval || now - lastUpdate > 200) {
+            chart.data.labels.push(""); // O un timestamp corto
+            chart.data.datasets[0].data.push(speedMbps.toFixed(2));
+            chart.update('none'); // 'none' para que no sea lenta la animación
+            lastUpdate = now;
         }
       }
     };
 
+    let lastUpdate = 0;
+
     xhr.onload = function() {
-      if (startTime) {
-        const timeElapsed = (performance.now() - startTime) / 1000;
-        const finalSpeed = (e.loaded * 8) / (timeElapsed * 1000000);
-        resolve(finalSpeed);
-      } else {
-        resolve(0);
-      }
+      const timeElapsed = (performance.now() - startTime) / 1000;
+      const finalSpeed = (xhr.response.byteLength * 8) / (timeElapsed * 1000000);
+      resolve(finalSpeed);
     };
 
     xhr.onerror = () => reject(new Error('Error de conexión'));
     
-    // Si la descarga tarda más de lo planeado, la cortamos y devolvemos lo que tengamos
+    // Timeout de seguridad
     setTimeout(() => {
-      if(xhr.readyState !== 4) {
-        xhr.abort();
-        // Calculamos velocidad con lo que alcanzó a bajar
-        if (startTime) {
-            const now = performance.now();
-            const timeElapsed = (now - startTime) / 1000;
-            const finalSpeed = (totalBytesReady * 8) / (timeElapsed * 1000000); // totalBytesReady sería una variable global o local
-            resolve(finalSpeed);
-        }
-      }
+        if(xhr.readyState !== 4) xhr.abort();
     }, duration);
 
-    let totalBytesReady = 0;
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 3) totalBytesReady = xhr.response ? xhr.response.byteLength : 0;
-    };
-
+    xhr.responseType = 'arraybuffer'; // Ayuda a medir el tamaño exacto en memoria
     xhr.send();
   });
 }
@@ -295,6 +274,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
