@@ -129,8 +129,10 @@
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
         document.getElementById('ipInfo').innerHTML = `
-          🌐 <b>IP:</b> ${data.ip} <br>
+         🌐 <b>IP:</b> ${data.ip} <br>
           📍 <b>Ciudad:</b> ${data.city || 'Desconocida'} <br>
+          🗺️ <b>Región:</b> ${data.region || 'Desconocida'} <br>
+          🌎 <b>País:</b> ${data.country_name || 'Desconocido'} <br>
           🏢 <b>Proveedor:</b> ${data.org || 'No disponible'}
         `;
       } catch (error) {
@@ -255,6 +257,7 @@
   </script>
 </body>
 </html>
+
 
 
 
